@@ -7,14 +7,14 @@ export const home = async (req, res) => {
     .populate("owner");
   return res.render("home", { pageTitle: "Home", videos });
 };
+
 export const watch = async (req, res) => {
-  //const id = req.params.id;
   const { id } = req.params;
   const video = await Video.findById(id).populate("owner");
   if (!video) {
     return res.render("404", { pageTitle: "Video not found." });
   }
-  res.render("watch", { pageTitle: video.title, video });
+  return res.render("watch", { pageTitle: video.title, video });
 };
 
 export const getEdit = async (req, res) => {
@@ -29,14 +29,14 @@ export const getEdit = async (req, res) => {
   if (String(video.owner) !== String(_id)) {
     return res.status(403).redirect("/");
   }
-  return res.render("edit", { pageTitle: `Edit ${video.title}`, video });
+  return res.render("edit", { pageTitle: `Edit: ${video.title}`, video });
 };
 
 export const postEdit = async (req, res) => {
-  const { id } = req.params;
   const {
     user: { _id },
   } = req.session;
+  const { id } = req.params;
   const { title, description, hashtags } = req.body;
   const video = await Video.exists({ _id: id });
   if (!video) {
@@ -61,14 +61,15 @@ export const postUpload = async (req, res) => {
   const {
     user: { _id },
   } = req.session;
-  const { path: fileUrl } = req.file;
-  // here we will add a video to the videos array.
+  const { video, thumb } = req.files;
+  console.log(video, thumb);
   const { title, description, hashtags } = req.body;
   try {
     const newVideo = await Video.create({
       title,
       description,
-      fileUrl,
+      fileUrl: video[0].path,
+      thumbUrl: thumb[0].path.path.replace(/[\\]/g, "/"),
       owner: _id,
       hashtags: Video.formatHashtags(hashtags),
     });
@@ -77,6 +78,7 @@ export const postUpload = async (req, res) => {
     user.save();
     return res.redirect("/");
   } catch (error) {
+    console.log(error);
     return res.status(400).render("upload", {
       pageTitle: "Upload Video",
       errorMessage: error._message,
@@ -96,8 +98,7 @@ export const deleteVideo = async (req, res) => {
   if (String(video.owner) !== String(_id)) {
     return res.status(403).redirect("/");
   }
-  await Video.findOneAndDelete(id);
-  //delete videos
+  await Video.findByIdAndDelete(id);
   return res.redirect("/");
 };
 
@@ -105,10 +106,9 @@ export const search = async (req, res) => {
   const { keyword } = req.query;
   let videos = [];
   if (keyword) {
-    //search
     videos = await Video.find({
       title: {
-        $regex: new RegExp(keyword, "ig"),
+        $regex: new RegExp(`${keyword}$`, "i"),
       },
     }).populate("owner");
   }
