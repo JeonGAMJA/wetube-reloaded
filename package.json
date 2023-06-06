@@ -7,8 +7,12 @@
     "url": "git+https://github.com/JeonGAMJA/wetube-reloaded.git"
   },
   "scripts": {
+    "start": "node build/init.js",
+    "build": "npm run build:server && npm run build:assets",
+    "build:server": "babel src -d build",
+    "build:assets": "webpack --mode=production",
     "dev:server": "nodemon",
-    "dev:assets": "webpack"
+    "dev:assets": "webpack --mode=development -w"
   },
   "author": "GamjaJeon",
   "license": "MIT",
@@ -23,6 +27,7 @@
     "connect-mongo": "^5.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-flash": "^0.0.2",
     "express-session": "^1.17.3",
     "mongodb": "^5.2.0",
     "mongoose": "^7.0.3",
@@ -34,7 +39,8 @@
     "regenerator-runtime": "^0.13.11"
   },
   "devDependencies": {
-    "@babel/core": "^7.21.4",
+    "@babel/cli": "^7.21.5",
+    "@babel/core": "^7.22.1",
     "@babel/node": "^7.20.7",
     "@babel/preset-env": "^7.21.4",
     "babel-loader": "^9.1.2",
